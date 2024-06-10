@@ -1,56 +1,65 @@
-// Importer le module HTTP
-import http from "http";
+import express from "express";
 
-// Définir le port d'écoute
+const app = express();
 const PORT = 3000;
 
-// Créer le serveur
-const server = http.createServer((req, res) => {
-  // Définir les en-têtes de réponse par défaut
-  res.setHeader("Content-Type", "application/json");
+// Middleware pour parser le JSON
+app.use(express.json());
 
-  // Gérer les différentes routes
-  if (req.method === "GET") {
-    switch (req.url) {
-      case "/":
-        res.statusCode = 200;
-        res.end(JSON.stringify({ message: "Bienvenue à la page d'accueil" }));
-        break;
-      case "/about":
-        res.statusCode = 200;
-        res.end(JSON.stringify({ message: "À propos de nous" }));
-        break;
-      case "/data":
-        res.setHeader("Content-Type", "application/json");
-        res.statusCode = 200;
-        res.end(JSON.stringify({ message: "Route /data atteinte" }));
-        break;
-      default:
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: "Page non trouvée" }));
-        break;
-    }
-  } else if (req.method === "POST" && req.url === "/submit") {
-    let body = "";
+// Liste des tâches
+let tasks = [];
 
-    // Collecter les données du corps de la requête
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
+// Route GET pour récupérer toutes les tâches
+app.get("/tasks", (req, res) => {
+  res.json({ tasks: tasks });
+});
 
-    // Traiter les données une fois reçues
-    req.on("end", () => {
-      res.setHeader("Content-Type", "application/json");
-      res.statusCode = 200;
-      res.end(JSON.stringify({ receivedData: JSON.parse(body) }));
-    });
-  } else {
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: "Méthode non autorisée" }));
+// Route POST pour ajouter une nouvelle tâche
+app.post("/tasks", (req, res) => {
+  const newTask = { id: tasks.length + 1, title: req.body.title };
+  tasks.push(newTask);
+  res.status(201).json({ message: "Tâche ajoutée avec succès", task: newTask });
+});
+
+// Route PUT pour mettre à jour une tâche par ID
+app.put("/tasks/:id", (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  const taskIndex = tasks.findIndex((task) => task.id === taskId);
+
+  if (taskIndex === -1) {
+    return res.status(404).json({ error: "Tâche non trouvée" });
   }
+
+  tasks[taskIndex].title = req.body.title;
+  res.json({
+    message: "Tâche mise à jour avec succès",
+    task: tasks[taskIndex],
+  });
+});
+
+// Route DELETE pour supprimer une tâche par ID
+app.delete("/tasks/:id", (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  const taskIndex = tasks.findIndex((task) => task.id === taskId);
+
+  if (taskIndex === -1) {
+    return res.status(404).json({ error: "Tâche non trouvée" });
+  }
+
+  const deletedTask = tasks.splice(taskIndex, 1);
+  res.json({ message: "Tâche supprimée avec succès", task: deletedTask[0] });
+});
+
+// Middleware pour gérer les routes non trouvées et les erreurs
+app.use((req, res) => {
+  res.status(404).json({ error: "Route non trouvée" });
+});
+
+app.use((err, req, res, next) => {
+  res.status(500).json({ error: "Erreur interne du serveur" });
 });
 
 // Démarrer le serveur
-server.listen(PORT, () => {
-  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Le serveur est en écoute sur http://localhost:${PORT}`);
 });
