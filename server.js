@@ -7,18 +7,18 @@ const PORT = 3000;
 // Créer le serveur
 const server = http.createServer((req, res) => {
   // Définir les en-têtes de réponse par défaut
-  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Content-Type", "application/json");
 
   // Gérer les différentes routes
   if (req.method === "GET") {
     switch (req.url) {
       case "/":
         res.statusCode = 200;
-        res.end("Bienvenue à la page d'accueil");
+        res.end(JSON.stringify({ message: "Bienvenue à la page d'accueil" }));
         break;
       case "/about":
         res.statusCode = 200;
-        res.end("À propos de nous");
+        res.end(JSON.stringify({ message: "À propos de nous" }));
         break;
       case "/data":
         res.setHeader("Content-Type", "application/json");
@@ -27,7 +27,7 @@ const server = http.createServer((req, res) => {
         break;
       default:
         res.statusCode = 404;
-        res.end("Page non trouvée");
+        res.end(JSON.stringify({ error: "Page non trouvée" }));
         break;
     }
   } else if (req.method === "POST" && req.url === "/submit") {
@@ -42,11 +42,11 @@ const server = http.createServer((req, res) => {
     req.on("end", () => {
       res.setHeader("Content-Type", "application/json");
       res.statusCode = 200;
-      res.end(JSON.stringify({ receivedData: body }));
+      res.end(JSON.stringify({ receivedData: JSON.parse(body) }));
     });
   } else {
     res.statusCode = 405;
-    res.end("Méthode non autorisée");
+    res.end(JSON.stringify({ error: "Méthode non autorisée" }));
   }
 });
 
