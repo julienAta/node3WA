@@ -18,7 +18,7 @@ const randomInt = (min, max) => {
 };
 
 const main = async () => {
-  console.info("Bienvenue dans le jeu de devinettes interactif !");
+  console.info("Bienvenue dans le jeu de devinettes!");
   let exit = false;
 
   while (!exit) {
